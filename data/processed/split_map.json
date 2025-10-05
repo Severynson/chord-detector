@@ -1,0 +1,10 @@
+{
+  "train": [
+    "Bm, F# train",
+    "noise train"
+  ],
+  "val": [
+    "Bm, F# val",
+    "noise val"
+  ]
+}

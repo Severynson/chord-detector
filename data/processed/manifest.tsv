@@ -1,4 +1,5 @@
 stem	feat	sr	fps	n_frames_kept	n_feats
-C	mel	44100	100	1380	128
-E	mel	44100	100	2136	128
-Noise	mel	44100	100	5098	128
+Bm, F# train	mel	44100	100	5068	128
+Bm, F# val	mel	44100	100	2187	128
+noise train	mel	44100	100	5098	128
+noise val	mel	44100	100	5098	128

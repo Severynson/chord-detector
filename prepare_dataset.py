@@ -63,6 +63,9 @@ EXCLUDE_LABELS: Set[str] = set()  # e.g., {"N"} to drop explicit N-labeled frame
 ALLOW_MISSING_LABELS = True  # skip WAVs with missing CSV (warn)
 RMS_NORMALIZE = True  # simple per-file RMS normalization (target ~0.1)
 
+# Split behavior
+USE_IMPLICIT_TRAIN_TEST_SPLIT = True # If True, use ' train'/' val' suffixes
+
 # ======================
 
 
@@ -329,6 +332,27 @@ def main():
     labels_json = {"label_to_index": label_map, "index_to_label": index_to_label}
     with open(os.path.join(OUT_DIR, "labels.json"), "w", encoding="utf-8") as f:
         json.dump(labels_json, f, ensure_ascii=False, indent=2)
+
+    # NEW: Create train/val split map if using implicit split
+    if USE_IMPLICIT_TRAIN_TEST_SPLIT:
+        train_stems = []
+        val_stems = []
+        # Get stems from the original wav files list to handle cases where processing fails
+        all_wav_stems = [os.path.splitext(os.path.basename(f))[0] for f in wav_files]
+
+        for stem in all_wav_stems:
+            # Check for space before train/val to avoid matching parts of names
+            if stem.endswith(" train"):
+                train_stems.append(stem)
+            elif stem.endswith(" val"):
+                val_stems.append(stem)
+
+        split_map = {"train": train_stems, "val": val_stems}
+        split_map_path = os.path.join(OUT_DIR, "split_map.json")
+        with open(split_map_path, "w", encoding="utf-8") as f:
+            json.dump(split_map, f, indent=2)
+        print(f"Saved implicit train/val split map to {split_map_path}")
+
 
     # Save manifest
     with open(os.path.join(OUT_DIR, "manifest.tsv"), "w", encoding="utf-8") as f:

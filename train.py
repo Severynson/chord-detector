@@ -9,7 +9,7 @@ from src.config import (
     WEIGHT_DECAY, NUM_WORKERS, DEVICE, MAJORITY_LABEL_THRESHOLD, CHECKPOINT_PATH
 )
 from src.dataset import ChordFramesDataset
-from src.model import CRNN
+from src.model import CRNN, ChordRecognitionWithSmoothing
 from src.utils import compute_class_weights, accuracy_per_frame
 
 def run():
@@ -36,8 +36,9 @@ def run():
     n_classes = train_ds.num_classes
     print(f"Features per frame (F): {n_mels}, Classes: {n_classes}, Train windows: {len(train_ds)}, Val windows: {len(val_ds)}")
 
-    model = CRNN(n_mels=n_mels, n_classes=n_classes,
-                 conv_channels=[32,64,128], rnn_hidden=128, rnn_layers=1, dropout=0.2).to(DEVICE)
+    base_model = CRNN(n_mels=n_mels, n_classes=n_classes,
+                      conv_channels=[32, 64, 128], rnn_hidden=128, rnn_layers=2, dropout=0.3, use_attention=True)
+    model = ChordRecognitionWithSmoothing(base_model, smoothing_window=5).to(DEVICE)
 
     class_weights = compute_class_weights(train_ds, n_classes).to(DEVICE)
     criterion = nn.CrossEntropyLoss(weight=class_weights)   # per-frame CE
@@ -76,9 +77,10 @@ def run():
             for X, y in tqdm(val_loader, desc=f"Epoch {epoch}/{EPOCHS} [val]"):
                 X = X.to(DEVICE)
                 y = y.to(DEVICE)
-                logits = model(X)
+                logits = model(X, apply_smoothing=False) # Get raw logits for loss
+                probs = model(X, apply_smoothing=True)   # Get smoothed probs for accuracy
                 loss = criterion(logits.reshape(-1, n_classes), y.reshape(-1))
-                acc = accuracy_per_frame(logits, y)
+                acc = accuracy_per_frame(probs, y)
                 v_loss += loss.item()
                 v_acc += acc
                 v_batches += 1
@@ -92,7 +94,7 @@ def run():
             best_val_acc = v_acc
             os.makedirs("checkpoints", exist_ok=True)
             torch.save({
-                "model_state": model.state_dict(),
+                "model_state": model.model.state_dict(),
                 "n_mels": n_mels,
                 "n_classes": n_classes,
                 "label_to_index": train_ds.label_to_index,

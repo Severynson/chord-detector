@@ -5,7 +5,7 @@ import librosa
 from collections import deque
 import time
 
-from src.model import CRNN
+from src.model import CRNN, ChordRecognitionWithSmoothing
 from src.config import (
     DEVICE, CHECKPOINT_PATH, SAMPLE_RATE, INFERENCE_HOP_SEC, 
     INFERENCE_WIN_SEC, N_FFT, N_MELS, HOP_LENGTH
@@ -19,8 +19,12 @@ def main():
         n_classes = ckpt["n_classes"]
         index_to_label = ckpt["index_to_label"]
         
-        model = CRNN(n_mels=n_mels, n_classes=n_classes).to(DEVICE)
-        model.load_state_dict(ckpt["model_state"])
+        # Ensure architecture matches the one used for training
+        base_model = CRNN(n_mels=n_mels, n_classes=n_classes,
+                          conv_channels=[32, 64, 128], rnn_hidden=128, 
+                          rnn_layers=2, dropout=0.3, use_attention=True)
+        model = ChordRecognitionWithSmoothing(base_model, smoothing_window=5).to(DEVICE)
+        model.model.load_state_dict(ckpt["model_state"])
         model.eval()
         print("Model loaded successfully.")
 
@@ -68,11 +72,11 @@ def main():
                 # --- Inference ---
                 with torch.no_grad():
                     features = torch.from_numpy(mel_spec).float().unsqueeze(0).to(DEVICE) # (1, T, F)
-                    logits = model(features) # (1, T, C) 
+                    probs = model(features) # (1, T, C) -> now returns smoothed probabilities
                     
                     # --- Get Prediction ---
-                    # Simple approach: average logits over time and take argmax
-                    pred_idx = logits.mean(dim=1).argmax(dim=1).item()
+                    # Simple approach: average probabilities over time and take argmax
+                    pred_idx = probs.mean(dim=1).argmax(dim=1).item()
                     pred_label = index_to_label[pred_idx]
                     
                     print(f"Predicted chord: {pred_label}")
