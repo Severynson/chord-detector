@@ -1,0 +1,4 @@
+stem	feat	sr	fps	n_frames_kept	n_feats
+C	mel	44100	100	1380	128
+E	mel	44100	100	2136	128
+Noise	mel	44100	100	5098	128

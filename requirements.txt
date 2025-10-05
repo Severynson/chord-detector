@@ -1,0 +1,5 @@
+sounddevice
+librosa
+numpy
+torch
+tqdm
