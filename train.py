@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from src.config import (
     FEATURES_DIR, LABELS_JSON_PATH, WINDOW_FRAMES, HOP_FRAMES, BATCH_SIZE, EPOCHS, LR, 
-    WEIGHT_DECAY, NUM_WORKERS, DEVICE, MAJORITY_LABEL_THRESHOLD, CHECKPOINT_PATH
+    WEIGHT_DECAY, NUM_WORKERS, DEVICE, CHECKPOINT_PATH
 )
 from src.dataset import ChordFramesDataset
 from src.model import CRNN, ChordRecognitionWithSmoothing
@@ -17,14 +17,12 @@ def run():
     train_ds = ChordFramesDataset(
         FEATURES_DIR, LABELS_JSON_PATH,
         window_frames=WINDOW_FRAMES, hop_frames=HOP_FRAMES,
-        split="train", split_ratio=0.85, seed=123,
-        majority_label_threshold=MAJORITY_LABEL_THRESHOLD
+        split="train", split_ratio=0.85, seed=123
     )
     val_ds = ChordFramesDataset(
         FEATURES_DIR, LABELS_JSON_PATH,
         window_frames=WINDOW_FRAMES, hop_frames=HOP_FRAMES,
-        split="val", split_ratio=0.85, seed=123,
-        majority_label_threshold=MAJORITY_LABEL_THRESHOLD
+        split="val", split_ratio=0.85, seed=123
     )
 
     train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, shuffle=True,
