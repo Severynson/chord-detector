@@ -4,7 +4,7 @@ Application detecting guitar Chords in real time powered by Deep Learning.
 
 # 🎯 Current validation loss & acurracy:
 
-val loss 1.4558 acc 0.920
+val loss 1.4558 (CE) acc 0.920
 
 # 🗂️ Dataset was extended, but it is based on:
 
