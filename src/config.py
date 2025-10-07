@@ -39,11 +39,11 @@ CQT_FMIN = 32.7031956626  # C1
 CHECKPOINT_PATH = "checkpoints/crnn_best.pt"
 WINDOW_FRAMES = 50
 HOP_FRAMES = 25
-BATCH_SIZE = 16
+BATCH_SIZE = 16 if os.environ["ENV"] == "local" else 228
 EPOCHS = 15
 LR = 1e-3
 WEIGHT_DECAY = 1e-4
-NUM_WORKERS = 2
+NUM_WORKERS = 2 if os.environ["ENV"] == "local" else 45
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
