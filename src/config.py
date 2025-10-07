@@ -6,7 +6,7 @@ import os
 DATASET_TYPE = "presplit_folders"
 
 # Directories for all modes
-PROCESSED_DIR = "data/processed" if os.environ["ENV"] == "local" else "."
+PROCESSED_DIR = "data/processed"
 FEATURES_DIR = os.path.join(PROCESSED_DIR, "features")
 LABELS_JSON_PATH = os.path.join(PROCESSED_DIR, "labels.json")
 
