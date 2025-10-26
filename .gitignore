@@ -1,6 +1,6 @@
 # Sounds files
-data/sound
-data/processed
+data/
+experimental/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
