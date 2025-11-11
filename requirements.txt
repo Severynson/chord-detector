@@ -1,0 +1,6 @@
+sounddevice
+librosa
+numpy
+torch
+tqdm
+pyaudio
