@@ -1,6 +1,6 @@
 sounddevice
 librosa
-numpy
+numpy<2.0
 torch
 tqdm
 pyaudio
