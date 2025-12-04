@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # Run as "python3 -m scripts.prepare_dataset"
 """
 prepare_dataset.py
