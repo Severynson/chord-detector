@@ -34,10 +34,13 @@ def spec_augment(
     return spec
 
 
+from src.config import CHORD_TO_ROOT_QUALITY, ROOT_TO_INT, QUALITY_TO_INT
+
+
 class ChordFramesDataset(Dataset):
     """
     Builds fixed-length windows from each per-file NPZ.
-    Each item: (X_win [T,F], y_win [T]) -> tensors.
+    Each item: (X_win [T,F], y_root [T], y_quality [T]) -> tensors.
     """
 
     def __init__(
@@ -193,11 +196,22 @@ class ChordFramesDataset(Dataset):
         X = X_all[start : start + self.window_frames]  # (T,F)
         y = y_all[start : start + self.window_frames]  # (T,)
 
+        # Convert original label to root and quality
+        y_root = np.zeros_like(y)
+        y_quality = np.zeros_like(y)
+
+        for i, label_idx in enumerate(y):
+            chord_name = self.index_to_label[label_idx]
+            root, quality = CHORD_TO_ROOT_QUALITY.get(chord_name, (ROOT_TO_INT['N'], QUALITY_TO_INT['other']))
+            y_root[i] = root
+            y_quality[i] = quality
+
         # to torch
         X = torch.from_numpy(X)
-        y = torch.from_numpy(y)
+        y_root = torch.from_numpy(y_root).long()
+        y_quality = torch.from_numpy(y_quality).long()
 
         if self.split == "train":
             X = spec_augment(X)
 
-        return X, y
+        return X, y_root, y_quality

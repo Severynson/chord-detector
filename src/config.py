@@ -50,3 +50,22 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # --- Real-time inference config ---
 INFERENCE_HOP_SEC = 0.2
 INFERENCE_WIN_SEC = 1.0
+# --- Chord Definitions ---
+PITCH_CLASSES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+ROOT_TO_INT = {**{pitch: i for i, pitch in enumerate(PITCH_CLASSES)}, 'N': 12}
+INT_TO_ROOT = {**{i: pitch for i, pitch in enumerate(PITCH_CLASSES)}, 12: 'N'}
+
+QUALITIES = ['maj', 'min', 'other']
+QUALITY_TO_INT = {quality: i for i, quality in enumerate(QUALITIES)}
+INT_TO_QUALITY = {i: quality for i, quality in enumerate(QUALITIES)}
+
+# Helper to map original chord names to (root, quality) integer tuples
+CHORD_TO_ROOT_QUALITY = {}
+for i, root in enumerate(PITCH_CLASSES):
+    # Major chords
+    CHORD_TO_ROOT_QUALITY[root] = (ROOT_TO_INT[root], QUALITY_TO_INT['maj'])
+    CHORD_TO_ROOT_QUALITY[root + 'm'] = (ROOT_TO_INT[root], QUALITY_TO_INT['min'])
+
+CHORD_TO_ROOT_QUALITY['Noise'] = (ROOT_TO_INT['N'], QUALITY_TO_INT['other'])
+# Special case for some datasets
+CHORD_TO_ROOT_QUALITY['N'] = (ROOT_TO_INT['N'], QUALITY_TO_INT['other'])

@@ -2,32 +2,27 @@ import torch
 import torch.nn as nn
 import math
 from typing import List
+from src.config import ROOT_TO_INT, QUALITY_TO_INT
 
 class CRNN(nn.Module):
     """
-    Enhanced CRNN for real-time chord recognition
-    
-    Key improvements:
-    - Better kernel sizes for harmonic capture
-    - Smoother frequency pooling
-    - Optional attention mechanism
-    - Temporal smoothing via output pooling
+    Enhanced CRNN for real-time chord recognition with a multi-head output
+    for root and quality.
     """
-    def __init__(self, n_mels: int, n_classes: int,
+    def __init__(self, n_mels: int, n_roots: int, n_qualities: int,
                  conv_channels: List[int] = [32, 64, 128],
                  rnn_hidden: int = 128,
                  rnn_layers: int = 2,
                  dropout: float = 0.3,
-                 use_attention: bool = False):
+                 use_attention: bool = False,
+                 quality_tower_dim: int = None):
         super().__init__()
         
-        # Build convolutional blocks with better kernel sizes
         convs = []
         f = n_mels
         in_ch = 1
         
         for i, out_ch in enumerate(conv_channels):
-            # Larger kernels to capture harmonic relationships
             k_freq = 5 if i == 0 else 3
             k_time = 3
             
@@ -37,12 +32,10 @@ class CRNN(nn.Module):
             convs.append(nn.BatchNorm2d(out_ch))
             convs.append(nn.ReLU(inplace=True))
             
-            # Less aggressive pooling: only first two layers
             if i < 2:
                 convs.append(nn.MaxPool2d(kernel_size=(2, 1)))
                 f = f // 2
             
-            # Optional: light dropout after each block
             if dropout > 0 and i < len(conv_channels) - 1:
                 convs.append(nn.Dropout2d(dropout * 0.5))
             
@@ -51,7 +44,6 @@ class CRNN(nn.Module):
         self.conv = nn.Sequential(*convs)
         conv_out_dim = conv_channels[-1] * f
         
-        # Bidirectional GRU
         self.rnn = nn.GRU(input_size=conv_out_dim,
                           hidden_size=rnn_hidden,
                           num_layers=rnn_layers,
@@ -70,72 +62,98 @@ class CRNN(nn.Module):
         
         self.dropout = nn.Dropout(dropout)
         
-        # Classifier with optional intermediate layer
-        self.classifier = nn.Sequential(
+        # --- Multi-head Classifier ---
+        self.root_head = nn.Sequential(
             nn.Linear(rnn_hidden * 2, rnn_hidden),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(rnn_hidden, n_classes)
+            nn.Linear(rnn_hidden, n_roots)
+        )
+        
+        self.quality_tower = None
+        if quality_tower_dim:
+            self.quality_tower = nn.Sequential(
+                nn.Linear(rnn_hidden * 2, quality_tower_dim),
+                nn.ReLU(),
+                nn.Dropout(dropout)
+            )
+            quality_head_input_dim = quality_tower_dim
+        else:
+            quality_head_input_dim = rnn_hidden * 2
+
+        self.quality_head = nn.Sequential(
+            nn.Linear(quality_head_input_dim, rnn_hidden // 2),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(rnn_hidden // 2, n_qualities)
         )
     
     def forward(self, x):  # x: (B,T,F)
         B, T, F = x.shape
         
-        # Reshape for conv: (B,1,F,T)
         x = x.unsqueeze(1).permute(0, 1, 3, 2)
         
-        # Conv blocks
-        x = self.conv(x)  # (B,C,F',T)
+        x = self.conv(x)
         
-        # Prepare for RNN: (T,B,C*F')
-        x = x.permute(3, 0, 1, 2)
-        T2, B2, C, Fp = x.shape
-        x = x.reshape(T2, B2, C * Fp)
+        T2, B2, C, Fp = x.permute(3, 0, 1, 2).shape
+        x = x.permute(3, 0, 1, 2).reshape(T2, B2, C * Fp)
         
-        # RNN
-        x, _ = self.rnn(x)  # (T,B,2H)
+        x, _ = self.rnn(x)
         
-        # Optional attention
         if self.use_attention:
             x, _ = self.attention(x, x, x)
         
         x = self.dropout(x)
-        x = self.classifier(x)  # (T,B,n_classes)
         
-        # Return (B,T,n_classes)
-        x = x.permute(1, 0, 2)
-        return x
+        root_logits = self.root_head(x)
+        
+        features_for_quality = x
+        if self.quality_tower:
+            features_for_quality = self.quality_tower(features_for_quality)
+        
+        quality_logits = self.quality_head(features_for_quality)
+        
+        root_logits = root_logits.permute(1, 0, 2)
+        quality_logits = quality_logits.permute(1, 0, 2)
+
+        return root_logits, quality_logits
 
 
 class ChordRecognitionWithSmoothing(nn.Module):
     """
-    Wrapper that adds temporal smoothing for more stable predictions
+    Wrapper that adds temporal smoothing for more stable predictions on multi-head outputs.
     """
     def __init__(self, base_model: nn.Module, smoothing_window: int = 5):
         super().__init__()
         self.model = base_model
         self.smoothing_window = smoothing_window
     
+    def _smooth_probs(self, probs: torch.Tensor) -> torch.Tensor:
+        if self.smoothing_window <= 1:
+            return probs
+            
+        B, T, C = probs.shape
+        kernel = torch.ones(C, 1, 1, self.smoothing_window, 
+                           device=probs.device) / self.smoothing_window
+        probs_t = probs.permute(0, 2, 1).unsqueeze(2)
+        
+        pad = self.smoothing_window // 2
+        probs_smooth = torch.nn.functional.conv2d(
+            probs_t, kernel, padding=(0, pad), groups=C
+        )
+        return probs_smooth.squeeze(2).permute(0, 2, 1)
+
     def forward(self, x, apply_smoothing=True):
-        logits = self.model(x)  # (B,T,C)
+        root_logits, quality_logits = self.model(x)
         
         if not apply_smoothing or not self.training:
-            probs = torch.softmax(logits, dim=-1)
+            root_probs = torch.softmax(root_logits, dim=-1)
+            quality_probs = torch.softmax(quality_logits, dim=-1)
             
-            # Apply temporal smoothing via convolution
-            if apply_smoothing and self.smoothing_window > 1:
-                B, T, C = probs.shape
-                # Smooth each class independently
-                kernel = torch.ones(C, 1, 1, self.smoothing_window, 
-                                  device=probs.device) / self.smoothing_window
-                probs_t = probs.permute(0, 2, 1).unsqueeze(2)  # (B,C,1,T)
-                
-                pad = self.smoothing_window // 2
-                probs_smooth = torch.nn.functional.conv2d(
-                    probs_t, kernel, padding=(0, pad), groups=C
-                )
-                probs = probs_smooth.squeeze(2).permute(0, 2, 1)  # (B,T,C)
+            if apply_smoothing:
+                root_probs = self._smooth_probs(root_probs)
+                quality_probs = self._smooth_probs(quality_probs)
             
-            return probs
+            return root_probs, quality_probs
         
-        return logits  # Return raw logits during training
+        return root_logits, quality_logits
