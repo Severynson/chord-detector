@@ -6,8 +6,8 @@ Application detecting guitar chords in real time powered by Deep Learning.
 
 # 🎯 Current Validation Metrics
 
-**Validation Loss (CE):** `2.4059`  
-**Accuracy:** `0.916`
+**Validation Loss (CE):** `6.1324`  
+**Accuracy:** `0.921`
 
 ⸻
 

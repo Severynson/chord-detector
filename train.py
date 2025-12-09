@@ -144,7 +144,7 @@ def run():
         v_acc /= max(v_batches, 1)
 
         print(
-            f"Epoch {epoch:02d} | train loss (CE) {t_loss:.4f} acc {t_acc:.3f}  ||  val loss (CE) {v_loss:.4f} acc {v_acc:.3f}"
+            f"Epoch {epoch:02d} | train loss (custom function) {t_loss:.4f} acc {t_acc:.3f}  ||  val loss (custom function) {v_loss:.4f} acc {v_acc:.3f}"
         )
 
         # save best
