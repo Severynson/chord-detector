@@ -46,14 +46,29 @@ Each chord was recorded using the following strumming patterns:
 # 🚀 How to Use (Inference)
 
 To run real-time chord detection locally, execute:
-
+```
 python app.py
+```
+This will launch a **PyQt5 desktop application** for live chord recognition.
 
-Once started, the console interface will:
-	•	Prompt you to select an input device (microphone) 🎙️
-	•	Continuously display updated chord classifications every 0.1 seconds
+### 🪟 Main Interface
 
-This allows live chord recognition directly from your audio input.
+Once the app opens, you’ll see a window with:
+
+- 🎙️ **Input device selector** — choose which microphone / audio interface to use  
+- ▶️ **Start / Stop button** — control when real-time detection is running  
+- 🎼 **Current chord display** — shows the most recently detected chord in large text  
+- 📈 **Status / confidence area** — shows detection confidence or logs (if enabled)
+
+### 🔊 Running real-time detection
+
+1. Select your preferred **input device** from the dropdown  
+2. Click **Start** to begin listening  
+3. Play chords on your guitar near the microphone  
+4. The **current detected chord** will update continuously in the UI  
+5. Click **Stop** to end the session and release the audio device
+
+The application performs **live inference** on the incoming audio stream, using the trained model to classify the current guitar chord in real time.
 
 ⸻
 
