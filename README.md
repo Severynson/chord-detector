@@ -2,6 +2,8 @@
 
 Application detecting guitar chords in real time powered by Deep Learning.
 
+![Demo](assets/demo/demo.gif)
+
 ⸻
 
 # 🎯 Current Validation Metrics
