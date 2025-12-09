@@ -5,9 +5,8 @@ Application detecting guitar chords in real time powered by Deep Learning.
 ⸻
 
 # 🎯 Current Validation Metrics
-
-**Validation Loss (CE):** `2.4059`  
-**Accuracy:** `0.916`
+ 
+**Accuracy:** `0.921`
 
 ⸻
 
@@ -73,6 +72,33 @@ data/test/<ChordName>/
 
 Each folder should contain raw .wav recordings of the corresponding chord.
 The script will generate spectrograms ready for the CRNN model.
+
+⸻
+
+## 🎯 Loss Function (GuitarChordDistanceLoss)
+
+Instead of a plain cross-entropy loss, this project uses a **custom, distance-aware chord loss** defined in `src/loss.py` as `GuitarChordDistanceLoss`.
+
+Key ideas:
+
+- **Musical structure–aware**
+  - Models **12 root notes** on a chromatic circle (A, A#, B, C, C#, D, D#, E, F, F#, G, G#).
+  - Distances between chords use a **circular semitone distance** (shortest path around the 12-tone ring).
+
+- **Major vs minor quality**
+  - Penalizes confusing major/minor versions of the same root differently than confusing completely unrelated chords.
+
+- **Noise class**
+  - A dedicated **Noise** class is treated as *maximally distant* from all musical chords.
+
+- **Hybrid objective**
+  - Combines standard **cross-entropy** with a **distance-based penalty**:
+    - `alpha` controls the tradeoff between classification accuracy and musical-distance awareness.
+    - `root_weight` balances root note importance vs chord quality (maj/min).
+    - `temperature` controls how “soft” or strict the distance penalty is.
+    - `noise_distance` sets how far the Noise class is from any chord.
+
+This encourages the model not only to be correct, but also to be **musically reasonable when wrong** (e.g., preferring C vs. Cm over C vs. F#).
 
 ⸻
 
