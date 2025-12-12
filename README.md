@@ -19,6 +19,8 @@ The dataset used for training was recorded manually using a single guitar:
 
 Recordings were made in a quiet room with an open window to allow minor background sounds, making the data high-quality yet realistic — since inference is expected to occur in similar environments, slight side sounds were intentionally admitted.
 
+Dataset and its more detailed documentation can be accessed at the [Hugging Face dataset page](https://huggingface.co/datasets/severyn-k/isolated-guitar-chords)
+
 ⸻
 
 ## 🎵 Recording Pattern
