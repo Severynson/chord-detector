@@ -14,30 +14,12 @@ Application detecting guitar chords in real time powered by Deep Learning.
 
 # 🗂️ Dataset
 
-The dataset used for training was recorded manually using a single guitar:
+The dataset used for training was recorded manually using a single acoustic guitar:
 🎸 Fender FA-15 3/4 Acoustic
 
-Recordings were made in a quiet room with an open window to allow minor background sounds, making the data high-quality yet realistic — since inference is expected to occur in similar environments, slight side sounds were intentionally admitted.
+Train and Test folders contain subfolders titled corresponding to labels of chord recording instances stored there.
 
-Dataset and its more detailed documentation can be accessed at the [Hugging Face dataset page](https://huggingface.co/datasets/severyn-k/isolated-guitar-chords)
-
-⸻
-
-## 🎵 Recording Pattern
-
-Each chord was recorded using the following strumming patterns:
-1. ⬇️ Regular down  
-2. ⬆️ Regular up  
-3. ⚡ Fast down  
-4. ⚡ Fast up  
-5. 🐢 Slow down *(string by string)*  
-6. 🐢 Slow up *(string by string)*  
-7. ⬇️⬇️ ⬆️⬆️ ⬇️ ⬆️  
-8. ⬇️⬆️⬇️⬆️⬇️⬆️  
-9. ⬇️⬇️⬇️⬇️⬇️⬇️ 
-
-**10–18)** ➡️ Repeat with another fingering (alternative voicing)  
-**19–25)** ➡️ Repeat steps 1–7 again for the new shape
+Dataset and its documentation can be accessed at the [dataset page on Hugging Face](https://huggingface.co/datasets/severyn-k/isolated-guitar-chords)
 
 ⸻
 
