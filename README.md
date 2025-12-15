@@ -120,8 +120,8 @@ If you’d like to leverage Google Colab’s GPU for faster training, use the in
 train_colab.ipynb
 
 ## 🧩 Notes:
-	•	You’ll need to set up your own environment variables (e.g., paths, credentials if needed).
-	•	You may need to adjust branch names or repository URLs if you are working on a fork or different version.
+  - You’ll need to set up your own environment variables (e.g., paths, credentials if needed).
+  - You may need to adjust branch names or repository URLs if you are working on a fork or different version.
 
 ⸻
 
@@ -129,9 +129,9 @@ train_colab.ipynb
 
 Contributions are welcome!
 You can improve:
-	•	The dataset (more chords, cleaner samples, varied instruments)
-	•	The model architecture or training parameters
-	•	The inference interface or performance optimizations
+  - The dataset (more chords, cleaner samples, varied instruments)
+  - The model architecture or training parameters
+  - The inference interface or performance optimizations
 
 Feel free to open a pull request or start a discussion for proposed improvements.
 
