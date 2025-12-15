@@ -139,4 +139,4 @@ Feel free to open a pull request or start a discussion for proposed improvements
 
 # 🧾 License
 
-This project is distributed under the MIT License — see LICENSE for details.
+This project is licensed under the Apache License 2.0 — see the LICENSE file for details.
