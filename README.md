@@ -1,6 +1,6 @@
 # 🕵️🎼 chord-detector
 
-Application detecting guitar chords in real time powered by Deep Learning.
+Application detecting guitar chords from audio input powered by Deep Learning.
 
 ![Demo](assets/demo/demo.gif)
 
